@@ -1,0 +1,13 @@
+store_id,store_name,district_id,district_name,region_id,region_name,open_date
+1101,Northline Store 1101,101,District 101,11,Northeast,2020-02-01
+1102,Northline Store 1102,101,District 101,11,Northeast,2010-12-01
+1103,Northline Store 1103,101,District 101,11,Northeast,2014-04-01
+1104,Northline Store 1104,102,District 102,11,Northeast,2013-03-01
+1105,Northline Store 1105,102,District 102,11,Northeast,2021-02-01
+1106,Northline Store 1106,102,District 102,11,Northeast,2020-12-01
+1107,Northline Store 1107,103,District 103,12,Midwest,2018-02-01
+1108,Northline Store 1108,103,District 103,12,Midwest,2019-07-01
+1109,Northline Store 1109,103,District 103,12,Midwest,2010-01-01
+1110,Northline Store 1110,104,District 104,12,Midwest,2011-04-01
+1111,Northline Store 1111,104,District 104,12,Midwest,2013-09-01
+1112,Northline Store 1112,104,District 104,12,Midwest,2019-01-01

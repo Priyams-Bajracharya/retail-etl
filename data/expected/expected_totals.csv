@@ -1,0 +1,6 @@
+business_date,pos_sales_rows_in_file,rows_expected_clean,rows_expected_quarantined,net_sales_in_file,net_sales_expected_clean
+2026-11-09,384,384,0,37757.62,37757.62
+2026-11-10,396,396,0,38219.99,38219.99
+2026-11-11,470,465,5,42835.67,42795.92
+2026-11-12,370,370,0,34304.47,34304.47
+2026-11-13,419,419,0,35942.80,35942.80

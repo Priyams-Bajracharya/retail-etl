@@ -1,0 +1,7 @@
+business_date,file,defect,txn_id,txn_line_id,store_id,item_id,detail
+2026-11-11,pos_sales_20261111.csv,negative_quantity,1101-20261111-9003,1,1101,10000005,quantity is -3
+2026-11-11,pos_sales_20261111.csv,null_item_id,1101-20261111-9002,1,1101,,item_id is blank
+2026-11-11,pos_sales_20261111.csv,null_item_id,1101-20261111-9001,1,1101,,item_id is blank
+2026-11-11,pos_sales_20261111.csv,item_not_in_master,1101-20261111-9004,1,1101,10009999,item 10009999 is not in item_master
+2026-11-11,pos_sales_20261111.csv,duplicate_line,1108-20261111-0002,2,1108,10000054,copy of 1108-20261111-0002 line 2
+2026-11-11,store_master_20261111.csv,district_change,,,1105,,store 1105 moves from district 102 to 101 (SCD2 event)

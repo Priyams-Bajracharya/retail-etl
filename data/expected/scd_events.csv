@@ -1,0 +1,6 @@
+business_date,table,key,attribute,change,scd_type
+2026-11-10,item_master,10000010,brand_name,Alder -> Birch,2
+2026-11-11,store_master,1105,district_id,102 -> 101,2
+2026-11-12,item_master,10000020,item_name,renamed (adds 'Deluxe'),1
+2026-11-12,item_master,10000030,subclass_id,215 -> 203,2
+2026-11-12,item_master,10000151,(new item),insert,
