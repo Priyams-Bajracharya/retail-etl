@@ -91,6 +91,12 @@ def retail_etl():
         def _run(logical_date=None):
             run_sql_file(sql_file, logical_date.strftime("%Y-%m-%d"))
         return _run()
+    
+    def gold(name):
+        @task(task_id=f"gold_{name}")
+        def _run(logical_date=None):
+            run_sql_file(f"gold/load_{name}.sql", logical_date.strftime("%Y-%m-%d"))
+        return _run()
 
     @task
     def silver_summary(logical_date=None):
@@ -118,7 +124,23 @@ def retail_etl():
 
     bronze >> [s_item, s_loc, s_cust, s_inv]
     s_item >> s_sales  # sales checks use that day's item master
-    [s_loc, s_cust, s_inv, s_sales] >> silver_summary()
+    summary = silver_summary()
+    [s_loc, s_cust, s_inv, s_sales] >> summary
+
+    # Gold: calendar (parents first), then the two hierarchies and customer
+    g_year, g_month = gold("dim_year"), gold("dim_month")
+    g_week, g_day = gold("dim_week"), gold("dim_day")
+    wait >> g_year >> [g_month, g_week] >> g_day
+
+    g_catg, g_subcatg, g_item = gold("dim_catg"), gold("dim_subcatg"), gold("dim_item")
+    g_regn, g_district, g_locn = gold("dim_regn"), gold("dim_district"), gold("dim_locn")
+    g_cust = gold("dim_customer")
+
+    s_item >> g_catg >> g_subcatg >> g_item
+    s_loc >> g_regn >> g_district >> g_locn
+    s_cust >> g_cust
+
+    dims_done = [g_day, g_item, g_locn, g_cust]  # facts will wait on these
 
 
 retail_etl()
