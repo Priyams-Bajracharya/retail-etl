@@ -111,6 +111,42 @@ def retail_etl():
             raise ValueError("Sales rows lost between Bronze and Silver")
         return {"silver": kept, "rejected": rejects}
 
+    @task
+    def reconcile(logical_date=None):
+        hook = SnowflakeHook(snowflake_conn_id=Variable.get("snowflake_conn_id").strip())
+        p = {"d": logical_date.strftime("%Y-%m-%d")}
+        day_ky = "TO_NUMBER(TO_CHAR(%(d)s::DATE, 'YYYYMMDD'))"
+        checks = [
+            ("sales rows (silver vs gold)",
+             "SELECT COUNT(*) FROM retail_etl.silver.SLV_SALES_LINE WHERE BUSINESS_DT = %(d)s",
+             f"SELECT COUNT(*) FROM retail_etl.gold.FCT_SALES WHERE DAY_KY = {day_ky}"),
+            ("net sales amount (silver vs gold)",
+             "SELECT COALESCE(SUM(SLS_AMT),0) FROM retail_etl.silver.SLV_SALES_LINE WHERE BUSINESS_DT = %(d)s",
+             f"SELECT COALESCE(SUM(SLS_AMT),0) FROM retail_etl.gold.FCT_SALES WHERE DAY_KY = {day_ky}"),
+            ("inventory positions (silver vs gold)",
+             "SELECT COUNT(*) FROM retail_etl.silver.SLV_INVENTORY_POSITION WHERE BUSINESS_DT = %(d)s",
+             "SELECT COUNT(*) FROM retail_etl.gold.FCT_INVENTORY WHERE EFF_START_DT <= %(d)s AND EFF_END_DT >= %(d)s"),
+            ("inventory on-hand total (silver vs gold)",
+             "SELECT COALESCE(SUM(ONHAND_QTY),0) FROM retail_etl.silver.SLV_INVENTORY_POSITION WHERE BUSINESS_DT = %(d)s",
+             "SELECT COALESCE(SUM(ONHAND_QTY),0) FROM retail_etl.gold.FCT_INVENTORY WHERE EFF_START_DT <= %(d)s AND EFF_END_DT >= %(d)s"),
+            ("items with more than one current row (must be 0)",
+             "SELECT 0",
+             "SELECT COUNT(*) FROM (SELECT ITEM_ID FROM retail_etl.gold.DIM_ITEM WHERE CURR_FLG GROUP BY 1 HAVING COUNT(*) > 1)"),
+            ("stores with more than one current row (must be 0)",
+             "SELECT 0",
+             "SELECT COUNT(*) FROM (SELECT LOCN_ID FROM retail_etl.gold.DIM_LOCN WHERE CURR_FLG GROUP BY 1 HAVING COUNT(*) > 1)"),
+        ]
+        failed = []
+        for name, src_sql, gold_sql in checks:
+            src = hook.get_first(src_sql, parameters=p)[0]
+            gold = hook.get_first(gold_sql, parameters=p)[0]
+            status = "OK" if src == gold else "FAIL"
+            print(f"{status:4} | {name}: source={src} gold={gold}")
+            if status == "FAIL":
+                failed.append(name)
+        if failed:
+            raise ValueError(f"Reconciliation failed for {logical_date.date()}: {failed}")
+
     wait = wait_for_files()
     files = list_files()
     wait >> files
@@ -140,7 +176,12 @@ def retail_etl():
     s_loc >> g_regn >> g_district >> g_locn
     s_cust >> g_cust
 
-    dims_done = [g_day, g_item, g_locn, g_cust]  # facts will wait on these
+    dims_done = [g_day, g_item, g_locn, g_cust]
+
+    g_sales, g_inv = gold("fct_sales"), gold("fct_inventory")
+    (dims_done + [s_sales]) >> g_sales
+    (dims_done + [s_inv]) >> g_inv
+    [g_sales, g_inv, summary] >> reconcile()
 
 
 retail_etl()
