@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 """
-generate_data.py: builds five days of the four Assignment 2.3 source files.
+generate_data.py: builds five days of the five Assignment 2.3 source files.
 
     item_master_YYYYMMDD.csv          daily snapshot  -> DIM_ITEM, DIM_SUBCATG, DIM_CATG
     store_master_YYYYMMDD.csv         store snapshot  -> DIM_LOCN, DIM_DISTRICT, DIM_REGN
     pos_sales_YYYYMMDD.csv            daily sales     -> FCT_SALES
     inventory_snapshot_YYYYMMDD.csv   daily position  -> FCT_INVENTORY
+    customer_master_YYYYMMDD.csv      customer snapshot -> DIM_CUSTOMER
 
-Every day gets all four files, so a sensor can wait on the four of them.
+Every day gets all five files, so a sensor can wait on the five of them.
 
-Day 3 carries five deliberate defects:
+Day 3 carries five deliberate bad sales rows:
     1. two sales rows with a null item_id
     2. one sales row with a negative quantity
     3. one sale for an item that is not in the item master
     4. one duplicated transaction line
-    5. one store whose district changes (an SCD2 event in store_master)
+and one SCD2 event: store 1105 moves district (in store_master).
 
 Other, legitimate changes happen on other days so the dimension loads have work to do:
     day 2: item 10000010 changes brand (SCD2)
@@ -22,7 +23,7 @@ Other, legitimate changes happen on other days so the dimension loads have work 
            and a new item 10000151 appears
 
 Output (under --out):
-    landing/    the 20 files the pipeline reads
+    landing/    the 25 files the pipeline reads
     expected/   answers for tests and reconciliation (the pipeline must not read these)
 
 Usage:  python generate_data.py --start-date 2026-11-09 --out ./data
